@@ -3,7 +3,20 @@ import { db } from '../../firebase/config';
 import { collection, getDocs } from 'firebase/firestore';
 import { saveCandidateApplication } from '../../services/db';
 import { useNavigate } from 'react-router-dom';
+const handleAnswer = async (choiceIdx) => {
+  const candidateName = localStorage.getItem('candidateName') || "Unknown";
 
+  if (choiceIdx !== questions[current].a) {
+    await addDoc(collection(db, "applications"), {
+      candidateName: candidateName, // Now we have the real name!
+      status: "knocked",
+      jobTitle: "Java Developer",
+      timestamp: new Date()
+    });
+    alert("Incorrect answer. Assessment ended.");
+    navigate('/login');
+    return;
+  }
 export default function MCQPage() {
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);

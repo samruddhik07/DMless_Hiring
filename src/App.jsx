@@ -49,6 +49,13 @@ export default function App() {
                 <Route path="/assessment" element={<MCQPage />} />
                 <Route path="/upload" element={<ResumeUpload />} />
                 <Route path="*" element={<Navigate to="/dashboard" />} />
+                {/* Public Routes for Candidates */}
+  <Route path="/apply/:jobId" element={<ApplyPage />} />
+  <Route path="/assessment/:jobId" element={<MCQPage />} />
+
+  {/* Existing Routes */}
+  <Route path="/auth" element={<AuthPage />} />
+  {/* ... */}
               </>
             )}
           </Routes>
