@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
+     <div className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
         <BrowserRouter>
           {user && <Navbar user={user} setDarkMode={setDarkMode} darkMode={darkMode} />}
           
