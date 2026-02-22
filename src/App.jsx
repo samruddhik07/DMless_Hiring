@@ -17,12 +17,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Fix Dark Mode globally
+  // SENIOR FIX: Apply dark mode to the HTML tag and the Body tag
   useEffect(() => {
+    const root = window.document.documentElement;
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
   }, [darkMode]);
 
@@ -34,27 +35,64 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div className="h-screen flex items-center justify-center dark:bg-slate-900 dark:text-white">Loading dmless...</div>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-bold tracking-widest animate-pulse">DMLESS</p>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+      {/* Root Container: Ensures dark mode background covers the whole screen */}
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+        
+        {/* Navbar only shows for recruiters (logged in) */}
         {user && <Navbar user={user} setDarkMode={setDarkMode} darkMode={darkMode} />}
         
-        <Routes>
-          {/* Public Routes - Anyone can access */}
-          <Route path="/apply/:jobId" element={<ApplyPage />} />
-          <Route path="/assessment/:jobId" element={<MCQPage />} />
-          <Route path="/upload" element={<ResumeUpload />} />
-          <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/dashboard" />} />
+        {/* Main Content Area */}
+        <div className={`${user ? 'max-w-7xl mx-auto p-4 md:p-8' : 'w-full'}`}>
+          <Routes>
+            {/* Public Candidate Routes */}
+            <Route path="/apply/:jobId" element={<ApplyPage />} />
+            <Route path="/assessment/:jobId" element={<MCQPage />} />
+            <Route path="/upload" element={<ResumeUpload />} />
 
-          {/* Protected Recruiter Routes */}
-          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
-          <Route path="/create-job" element={user ? <CreateJob /> : <Navigate to="/auth" />} />
+            {/* Auth Route */}
+            <Route 
+              path="/auth" 
+              element={!user ? <AuthPage /> : <Navigate to="/dashboard" />} 
+            />
 
-          {/* Default */}
-          <Route path="/" element={<Navigate to={user ? "/dashboard" : "/auth"} />} />
-        </Routes>
+            {/* Protected Recruiter Routes */}
+            <Route 
+              path="/dashboard" 
+              element={user ? <Dashboard /> : <Navigate to="/auth" />} 
+            />
+            <Route 
+              path="/create-job" 
+              element={user ? <CreateJob /> : <Navigate to="/auth" />} 
+            />
+
+            {/* Default Redirection */}
+            <Route path="/" element={<Navigate to={user ? "/dashboard" : "/auth"} />} />
+            
+            {/* Catch-all for 404 - Redirects to home */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </div>
+
+        {/* Floating Theme Toggle for candidates (when no navbar is present) */}
+        {!user && (
+          <button 
+            onClick={() => setDarkMode(!darkMode)}
+            className="fixed bottom-6 right-6 p-4 rounded-full bg-white dark:bg-slate-800 shadow-2xl border dark:border-slate-700 text-slate-600 dark:text-yellow-400 z-50 hover:scale-110 transition-transform"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+        )}
       </div>
     </BrowserRouter>
   );

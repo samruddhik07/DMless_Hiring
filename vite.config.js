@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/', // Critical: Ensures absolute pathing for assets
   server: {
-    historyApiFallback: true, // This redirects all 404s to index.html
+    historyApiFallback: true, // Force redirect all 404s to index.html
   }
 })
