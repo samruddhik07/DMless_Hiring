@@ -1,15 +1,12 @@
 {
   "name": "dmless",
-  "version": "1.0.0",
   "private": true,
+  "version": "1.0.0",
   "type": "module",
-  "engines": {
-    "node": "18.x"
-  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "preview": "node ./node_modules/vite/bin/vite.js preview"
   },
   "dependencies": {
     "firebase": "^10.8.0",
