@@ -1,66 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Ensure useState is imported
+import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase/config';
-import { collection, getDocs } from 'firebase/firestore';
-import { saveCandidateApplication } from '../../services/db';
-import { useNavigate } from 'react-router-dom';
-const handleAnswer = async (choiceIdx) => {
-  const candidateName = localStorage.getItem('candidateName') || "Unknown";
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 
-  if (choiceIdx !== questions[current].a) {
-    await addDoc(collection(db, "applications"), {
-      candidateName: candidateName, // Now we have the real name!
-      status: "knocked",
-      jobTitle: "Java Developer",
-      timestamp: new Date()
-    });
-    alert("Incorrect answer. Assessment ended.");
-    navigate('/login');
-    return;
-  }
 export default function MCQPage() {
+  const { jobId } = useParams();
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
+  // Load questions from Firestore
   useEffect(() => {
-    const fetchJob = async () => {
-      const snap = await getDocs(collection(db, "jobs"));
-      if (!snap.empty) setQuestions(snap.docs[0].data().questions);
+    const fetchQuestions = async () => {
+      try {
+        const jobDoc = await getDoc(doc(db, "jobs", jobId));
+        if (jobDoc.exists()) {
+          setQuestions(jobDoc.data().questions || []);
+        }
+      } catch (err) {
+        console.error("Error fetching questions:", err);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchJob();
-  }, []);
+    fetchQuestions();
+  }, [jobId]);
 
-  const handleAnswer = async (choiceIdx) => {
-    // REQUIREMENT: If incorrect, stop test and mark as knocked
-    if (choiceIdx !== questions[current].a) {
-      await saveCandidateApplication({
-        candidateName: "Candidate_" + Math.random().toString(36).substr(2, 5),
+  const handleAnswer = async (selectedIdx) => {
+    const candidateName = localStorage.getItem('candidateName') || "Anonymous";
+
+    // Requirement: Knockout logic (Wrong answer = end test)
+    if (selectedIdx !== questions[current].a) {
+      await addDoc(collection(db, "applications"), {
+        candidateName,
+        jobId,
         status: "knocked",
-        score: current
+        timestamp: new Date()
       });
-      alert("Application stopped. You did not meet the minimum requirements.");
-      navigate('/login');
+      alert("Assessment ended. You did not meet the requirements.");
+      navigate('/auth');
       return;
     }
 
-    // REQUIREMENT: If all correct, navigate to resume upload
-    if (current === 4) {
+    // Requirement: All correct = Resume Upload
+    if (current === questions.length - 1) {
       navigate('/upload');
     } else {
       setCurrent(current + 1);
     }
   };
 
-  if (questions.length === 0) return <div className="p-20 text-center text-xl">Loading Assessment...</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center dark:text-white">Loading Assessment...</div>;
+  if (questions.length === 0) return <div className="h-screen flex items-center justify-center dark:text-white">No questions found for this job.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto mt-20 p-10 bg-white rounded-3xl shadow-xl border">
-      <h3 className="text-indigo-600 font-bold mb-4 uppercase tracking-widest text-sm">Step 1: Technical Screening</h3>
-      <h2 className="text-2xl font-bold mb-8">{questions[current].q}</h2>
+    <div className="max-w-2xl mx-auto mt-20 p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border dark:border-slate-700">
+      <div className="flex justify-between items-center mb-8">
+        <span className="text-indigo-600 font-bold uppercase tracking-widest text-xs">Technical Screening</span>
+        <span className="text-gray-400 text-sm font-bold">Question {current + 1} / {questions.length}</span>
+      </div>
+      
+      <h2 className="text-2xl font-bold mb-10 dark:text-white">{questions[current].q}</h2>
+      
       <div className="grid gap-4">
-        {questions[current].o.map((opt, i) => (
-          <button key={i} onClick={() => handleAnswer(i)} className="p-4 border-2 rounded-2xl text-left hover:bg-indigo-50 hover:border-indigo-500 transition">
-            {opt}
+        {questions[current].o.map((option, idx) => (
+          <button 
+            key={idx}
+            onClick={() => handleAnswer(idx)}
+            className="w-full text-left p-5 border-2 border-slate-100 dark:border-slate-700 rounded-2xl hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all dark:text-white group"
+          >
+            <span className="inline-block w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-center leading-8 mr-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+              {String.fromCharCode(65 + idx)}
+            </span>
+            {option}
           </button>
         ))}
       </div>

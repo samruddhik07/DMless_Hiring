@@ -1,26 +1,18 @@
 import { db } from "../firebase/config";
-import { collection, addDoc, doc, updateDoc, getDocs, getDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 
-// Requirement: Create a job with 5 MCQs
-export const createJobWithMCQs = async (jobTitle, company, questions) => {
-  return await addDoc(collection(db, "jobs"), {
-    title: jobTitle,
-    company: company,
-    questions: questions, // Array of 5 question objects
+// 1. Create a job with 5 MCQs
+export const createJob = (jobData) => addDoc(collection(db, "jobs"), jobData);
+
+// 2. Save candidate application
+export const startApplication = (appData) => addDoc(collection(db, "applications"), {
+    ...appData,
+    status: "applied",
     createdAt: new Date()
-  });
-};
+});
 
-// Requirement: Save candidate application & Update status
-export const saveCandidateApplication = async (data) => {
-  return await addDoc(collection(db, "applications"), {
-    ...data,
-    appliedAt: new Date()
-  });
-};
-
-// Requirement: Update status as "knocked" or "shortlisted"
-export const updateStatus = async (appId, status) => {
-  const ref = doc(db, "applications", appId);
-  return await updateDoc(ref, { status: status });
+// 3. Update status (Knocked or Shortlisted)
+export const updateAppStatus = (id, status, resumeURL = null) => {
+    const ref = doc(db, "applications", id);
+    return updateDoc(ref, { status, resumeURL });
 };
